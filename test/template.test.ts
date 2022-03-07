@@ -23,7 +23,6 @@ describe("tests", () => {
 
   describe("FundMe tests", () => {
     it("initialises properly", async () => {
-      // console.log(await FundMe.getPrice());
       expect(await FundMe.owner()).to.equal(owner.address);
       const fundersArrayLen = await FundMe.funders.length;
       expect(fundersArrayLen).to.equal(0);
@@ -33,9 +32,6 @@ describe("tests", () => {
     });
   });
 
-  // there can easily be more than one section for this
-  // this is just a loose category, things like minting, royalties, and more
-  //   are commonly split into their own describe blocks
   describe("state-changing functions", () => {
     it("fund accepts donation", async () => {
       await FundMe.connect(funder).fund({
@@ -68,7 +64,6 @@ describe("tests", () => {
       });
       await FundMe.connect(owner).withdraw();
       const balance = await ethers.provider.getBalance(FundMe.address);
-      // console.log(balanceBefore, balanceAfter);
       expect(balance).to.equal(0);
     });
   });
