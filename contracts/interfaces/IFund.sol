@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.0;
+pragma solidity 0.8.9;
 
 interface IFund {
 
@@ -9,6 +9,5 @@ interface IFund {
     payable;
 
     function withdraw()
-    external
-    payable;
+    external;
 }

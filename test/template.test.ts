@@ -43,7 +43,7 @@ describe("tests", () => {
       expect(fundedAmount).to.equal(parseEther("0.005"));
     });
 
-    it("fund accepts multiple donations", async () => {
+    it("fund accepts donations from multiple donors", async () => {
       await FundMe.connect(funder).fund({
         value: parseEther("0.005"),
       });
@@ -56,6 +56,14 @@ describe("tests", () => {
       const fundedAmount2 = await FundMe.addressToAmountFunded(funder2Address);
       const totalAmountFunded = fundedAmount1.add(fundedAmount2);
       expect(totalAmountFunded).to.equal(parseEther("1.005"));
+    });
+
+    it("single funder can donate multiple times", async () => {
+      await FundMe.connect(funder).fund({ value: parseEther("1") });
+      await FundMe.connect(funder).fund({ value: parseEther("2") });
+      const funderAddress = await FundMe.funders(0);
+      const fundedAmount = await FundMe.addressToAmountFunded(funderAddress);
+      expect(fundedAmount).to.equal(parseEther("3"));
     });
 
     it("Owner can withdraw funds", async () => {
@@ -98,6 +106,34 @@ describe("tests", () => {
       const total = await FundMe.viewFundsAvailable();
 
       await expect(total).to.equal(parseEther("2"));
+    });
+
+    it("can view amount funded by a single donor", async () => {
+      await FundMe.connect(funder).fund({ value: parseEther("2") });
+      await FundMe.connect(funder2).fund({ value: parseEther("5") });
+      const amount1Funded = await FundMe.connect(
+        owner
+      ).viewAmountDonatedByFunder(funder.address);
+      const amount2Funded = await FundMe.connect(
+        owner
+      ).viewAmountDonatedByFunder(funder2.address);
+      expect(amount1Funded).to.equal(parseEther("2"));
+      expect(amount2Funded).to.equal(parseEther("5"));
+    });
+  });
+
+  describe("event functions", function () {
+    it("withdraw emits Withdraw event", async () => {
+      await FundMe.connect(funder).fund({ value: parseEther("2") });
+      await expect(FundMe.connect(owner).withdraw()).to.emit(
+        FundMe,
+        "Withdrawn()"
+      );
+    });
+    it("fund emits Desposited event", async () => {
+      await expect(
+        FundMe.connect(funder).fund({ value: parseEther("2") })
+      ).to.emit(FundMe, "Deposited()");
     });
   });
 });
