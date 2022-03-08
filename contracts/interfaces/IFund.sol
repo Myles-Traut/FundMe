@@ -4,10 +4,10 @@ pragma solidity 0.8.9;
 
 interface IFund {
 
-    function fund()
+    function fundEth()
     external
     payable;
 
-    function withdraw()
+    function withdrawEth()
     external;
 }

@@ -27,50 +27,54 @@ describe("tests", () => {
       const fundersArrayLen = await FundMe.funders.length;
       expect(fundersArrayLen).to.equal(0);
       expect(
-        await FundMe.addressToAmountFunded(ethers.constants.AddressZero)
+        await FundMe.addressToEthAmountFunded(ethers.constants.AddressZero)
       ).to.equal(0);
     });
   });
 
   describe("state-changing functions", () => {
     it("fund accepts donation", async () => {
-      await FundMe.connect(funder).fund({
+      await FundMe.connect(funder).fundEth({
         value: parseEther("0.005"),
       });
       const funderAddress = await FundMe.funders(0);
       expect(funderAddress).to.equal(funder.address);
-      const fundedAmount = await FundMe.addressToAmountFunded(funderAddress);
+      const fundedAmount = await FundMe.addressToEthAmountFunded(funderAddress);
       expect(fundedAmount).to.equal(parseEther("0.005"));
     });
 
     it("fund accepts donations from multiple donors", async () => {
-      await FundMe.connect(funder).fund({
+      await FundMe.connect(funder).fundEth({
         value: parseEther("0.005"),
       });
-      await FundMe.connect(funder2).fund({
+      await FundMe.connect(funder2).fundEth({
         value: parseEther("1"),
       });
       const funder1Address = await FundMe.funders(0);
       const funder2Address = await FundMe.funders(1);
-      const fundedAmount1 = await FundMe.addressToAmountFunded(funder1Address);
-      const fundedAmount2 = await FundMe.addressToAmountFunded(funder2Address);
+      const fundedAmount1 = await FundMe.addressToEthAmountFunded(
+        funder1Address
+      );
+      const fundedAmount2 = await FundMe.addressToEthAmountFunded(
+        funder2Address
+      );
       const totalAmountFunded = fundedAmount1.add(fundedAmount2);
       expect(totalAmountFunded).to.equal(parseEther("1.005"));
     });
 
     it("single funder can donate multiple times", async () => {
-      await FundMe.connect(funder).fund({ value: parseEther("1") });
-      await FundMe.connect(funder).fund({ value: parseEther("2") });
+      await FundMe.connect(funder).fundEth({ value: parseEther("1") });
+      await FundMe.connect(funder).fundEth({ value: parseEther("2") });
       const funderAddress = await FundMe.funders(0);
-      const fundedAmount = await FundMe.addressToAmountFunded(funderAddress);
+      const fundedAmount = await FundMe.addressToEthAmountFunded(funderAddress);
       expect(fundedAmount).to.equal(parseEther("3"));
     });
 
     it("Owner can withdraw funds", async () => {
-      await FundMe.connect(funder).fund({
+      await FundMe.connect(funder).fundEth({
         value: parseEther("1"),
       });
-      await FundMe.connect(owner).withdraw();
+      await FundMe.connect(owner).withdrawEth();
       const balance = await ethers.provider.getBalance(FundMe.address);
       expect(balance).to.equal(0);
     });
@@ -78,17 +82,17 @@ describe("tests", () => {
 
   describe("error tests", () => {
     it("Only owner can withdraw funds", async () => {
-      await FundMe.connect(funder).fund({
+      await FundMe.connect(funder).fundEth({
         value: parseEther("1"),
       });
-      await expect(FundMe.connect(funder).withdraw()).to.be.revertedWith(
+      await expect(FundMe.connect(funder).withdrawEth()).to.be.revertedWith(
         "Unauthorised"
       );
     });
 
     it("fund reverts when insufficient amount is funded", async () => {
       await expect(
-        FundMe.connect(funder).fund({
+        FundMe.connect(funder).fundEth({
           value: parseEther("0.00001"),
         })
       ).to.be.revertedWith("Please fund more eth");
@@ -97,10 +101,10 @@ describe("tests", () => {
 
   describe("view tests", () => {
     it("can view amount available", async () => {
-      await FundMe.connect(funder).fund({
+      await FundMe.connect(funder).fundEth({
         value: parseEther("1"),
       });
-      await FundMe.connect(funder2).fund({
+      await FundMe.connect(funder2).fundEth({
         value: parseEther("1"),
       });
       const total = await FundMe.viewFundsAvailable();
@@ -109,8 +113,8 @@ describe("tests", () => {
     });
 
     it("can view amount funded by a single donor", async () => {
-      await FundMe.connect(funder).fund({ value: parseEther("2") });
-      await FundMe.connect(funder2).fund({ value: parseEther("5") });
+      await FundMe.connect(funder).fundEth({ value: parseEther("2") });
+      await FundMe.connect(funder2).fundEth({ value: parseEther("5") });
       const amount1Funded = await FundMe.connect(
         owner
       ).viewAmountDonatedByFunder(funder.address);
@@ -124,13 +128,13 @@ describe("tests", () => {
 
   describe("event functions", function () {
     it("withdraw emits Withdrawn event", async () => {
-      await FundMe.connect(funder).fund({ value: parseEther("2") });
-      expect(await FundMe.connect(owner).withdraw())
+      await FundMe.connect(funder).fundEth({ value: parseEther("2") });
+      expect(await FundMe.connect(owner).withdrawEth())
         .to.emit(FundMe, "Withdrawn")
         .withArgs(parseEther("2"));
     });
     it("fund emits Deposited event", async () => {
-      expect(await FundMe.connect(funder).fund({ value: parseEther("2") }))
+      expect(await FundMe.connect(funder).fundEth({ value: parseEther("2") }))
         .to.emit(FundMe, "Deposited")
         .withArgs(parseEther("2"));
     });

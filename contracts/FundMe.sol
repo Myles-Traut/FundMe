@@ -18,7 +18,7 @@ contract FundMe is IFund {
     ----------------*/
 
     address public owner;
-    mapping(address => uint256) public addressToAmountFunded;
+    mapping(address => uint256) public addressToEthAmountFunded;
     address [] public funders;
     uint256 public minAmount = 0.004 ether;
 
@@ -30,15 +30,15 @@ contract FundMe is IFund {
     -------------------------------*/
 
     // minimum donation is $0.004 ether. Roughly 10 dollars
-    function fund() public payable {
+    function fundEth() public payable {
         require(msg.value >= minAmount, "Please fund more eth");
         uint256 amount = msg.value;
-        addressToAmountFunded[msg.sender] += amount;
+        addressToEthAmountFunded[msg.sender] += amount;
         funders.push(msg.sender);
         emit Deposited(amount);
     }
 
-    function withdraw() public OnlyOwner {
+    function withdrawEth() public OnlyOwner {
         uint256 amount = address(this).balance;
         (bool sent, bytes memory data) = msg.sender.call{ value: amount }("");
         require(sent, "Failed to send Ether");
@@ -55,7 +55,7 @@ contract FundMe is IFund {
     }
 
     function viewAmountDonatedByFunder(address funder) public view returns(uint256) {
-        return addressToAmountFunded[funder];
+        return addressToEthAmountFunded[funder];
     }
 
     /*--------------------
