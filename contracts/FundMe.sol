@@ -10,8 +10,8 @@ contract FundMe is IFund {
         Events
     ----------------*/
 
-    event Withdrawn();
-    event Deposited();
+    event Withdrawn(uint256 amount);
+    event Deposited(uint256 amount);
 
     /*----------------
         Storage
@@ -32,14 +32,17 @@ contract FundMe is IFund {
     // minimum donation is $0.004 ether. Roughly 10 dollars
     function fund() public payable {
         require(msg.value >= minAmount, "Please fund more eth");
-        addressToAmountFunded[msg.sender] += msg.value;
+        uint256 amount = msg.value;
+        addressToAmountFunded[msg.sender] += amount;
         funders.push(msg.sender);
-        emit Deposited();
+        emit Deposited(amount);
     }
 
     function withdraw() public OnlyOwner {
-        payable(msg.sender).transfer(address(this).balance);
-        emit Withdrawn();
+        uint256 amount = address(this).balance;
+        (bool sent, bytes memory data) = msg.sender.call{ value: amount }("");
+        require(sent, "Failed to send Ether");
+        emit Withdrawn(amount);
     }
 
     /*----------------------

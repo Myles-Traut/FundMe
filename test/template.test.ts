@@ -123,17 +123,16 @@ describe("tests", () => {
   });
 
   describe("event functions", function () {
-    it("withdraw emits Withdraw event", async () => {
+    it("withdraw emits Withdrawn event", async () => {
       await FundMe.connect(funder).fund({ value: parseEther("2") });
-      await expect(FundMe.connect(owner).withdraw()).to.emit(
-        FundMe,
-        "Withdrawn()"
-      );
+      expect(await FundMe.connect(owner).withdraw())
+        .to.emit(FundMe, "Withdrawn")
+        .withArgs(parseEther("2"));
     });
-    it("fund emits Desposited event", async () => {
-      await expect(
-        FundMe.connect(funder).fund({ value: parseEther("2") })
-      ).to.emit(FundMe, "Deposited()");
+    it("fund emits Deposited event", async () => {
+      expect(await FundMe.connect(funder).fund({ value: parseEther("2") }))
+        .to.emit(FundMe, "Deposited")
+        .withArgs(parseEther("2"));
     });
   });
 });
